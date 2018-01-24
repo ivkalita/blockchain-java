@@ -2,8 +2,6 @@ group 'ru.kaduev'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
-apply plugin: 'application'
-mainClassName = "ru.kaduev.blockchain.app.Application"
 
 sourceCompatibility = 1.8
 
@@ -12,6 +10,5 @@ repositories {
 }
 
 dependencies {
-    compile project(':impl')
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
