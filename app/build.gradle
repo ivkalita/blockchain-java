@@ -1,17 +1,35 @@
 group 'ru.kaduev'
 version '1.0-SNAPSHOT'
 
+buildscript {
+    ext {
+        springBootVersion = '2.0.0.BUILD-SNAPSHOT'
+    }
+    repositories {
+        mavenCentral()
+        maven { url "https://repo.spring.io/snapshot" }
+        maven { url "https://repo.spring.io/milestone" }
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+
 apply plugin: 'java'
-apply plugin: 'application'
-mainClassName = "ru.kaduev.blockchain.app.Application"
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
 
 sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
+    maven { url "https://repo.spring.io/snapshot" }
+    maven { url "https://repo.spring.io/milestone" }
 }
 
 dependencies {
     compile project(':impl')
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.0.0.M7'
+    compile 'org.springframework.shell:spring-shell-starter:2.0.1.BUILD-SNAPSHOT'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }

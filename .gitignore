@@ -1,4 +1,6 @@
 .gradle
 .idea
 build
+out
+spring-shell.log
 blockchain_database

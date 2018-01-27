@@ -16,7 +16,7 @@ public class ProofOfWork {
         }
     }
 
-    private static final Integer TARGET_BITS = 24;
+    private static final Integer TARGET_BITS = 5;
 
     private Block block;
 
