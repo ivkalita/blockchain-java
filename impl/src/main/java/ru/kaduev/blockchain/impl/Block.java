@@ -32,7 +32,7 @@ public class Block {
     public String toString() {
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
         return String.format(
-                "Timestamp: %s\nP. Hash: %s\nC. Hash: %s\nData: %s\nNonce: %s\n",
+                "Timestamp: %s\nP. Hash: %s\nC. Hash: %s\nData: %s\nNonce: %s",
                 df.format(this.timestamp.getTime()),
                 HexHelper.printHexBinary(this.prevBlockHash),
                 HexHelper.printHexBinary(this.hash),
@@ -54,5 +54,9 @@ public class Block {
 
     public byte[] getHash() {
         return hash;
+    }
+
+    public long getNonce() {
+        return nonce;
     }
 }

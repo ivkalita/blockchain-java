@@ -20,7 +20,7 @@ public class ProofOfWork {
 
     private Block block;
 
-    ProofOfWork(Block block) {
+    public ProofOfWork(Block block) {
         this.block = block;
     }
 
@@ -40,14 +40,8 @@ public class ProofOfWork {
         System.out.println(String.format("Mining the block containing \"%s\"", new String(block.getData())));
         long nonce = 0;
         while (nonce < Long.MAX_VALUE) {
-            ByteBuffer data = prepareData(nonce);
-            try {
-                hash = MessageDigest.getInstance("SHA-256").digest(data.array());
-            } catch (NoSuchAlgorithmException e) {
-                throw new RuntimeException("No SHA-256 algorithm provider found.");
-            }
-
-            if (numberOfLeadingZeroes(hash) >= TARGET_BITS) {
+            hash = hashWithNonce(nonce);
+            if (isHashValid(hash)) {
                 System.out.println(HexHelper.printHexBinary(hash));
                 System.out.println("zeroes = " + numberOfLeadingZeroes(hash));
                 break;
@@ -57,6 +51,19 @@ public class ProofOfWork {
         System.out.println();
 
         return new Proof(nonce, hash);
+    }
+
+    private byte[] hashWithNonce(long nonce) {
+        ByteBuffer data = prepareData(nonce);
+        try {
+            return MessageDigest.getInstance("SHA-256").digest(data.array());
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("No SHA-256 algorithm provider found.");
+        }
+    }
+
+    private boolean isHashValid(byte[] hash) {
+        return numberOfLeadingZeroes(hash) >= TARGET_BITS;
     }
 
     private int numberOfLeadingZeroes(byte[] array) {
@@ -85,5 +92,9 @@ public class ProofOfWork {
         }
 
         return result;
+    }
+
+    public boolean isBlockValid() {
+        return isHashValid(hashWithNonce(block.getNonce()));
     }
 }
