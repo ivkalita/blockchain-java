@@ -1,10 +1,11 @@
 package ru.kaduev.blockchain.impl;
 
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class Block {
+public class Block implements Serializable {
     private Date timestamp;
     private byte[] data;
     private byte[] prevBlockHash;
@@ -58,5 +59,26 @@ public class Block {
 
     public long getNonce() {
         return nonce;
+    }
+
+    public byte[] getBytes() {
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ObjectOutputStream stream = new ObjectOutputStream(out);
+            stream.writeObject(this);
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    public static Block fromBytes(byte[] bytes) {
+        try {
+            ByteArrayInputStream in = new ByteArrayInputStream(bytes);
+            ObjectInputStream stream = new ObjectInputStream(in);
+            return (Block)stream.readObject();
+        } catch (ClassNotFoundException|IOException e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
 }
