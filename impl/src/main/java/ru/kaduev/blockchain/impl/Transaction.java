@@ -4,23 +4,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.List;
 
 public class Transaction implements Serializable {
     private byte[] id;
-    private TransactionInput[] inputs;
-    private TransactionOutput[] outputs;
+    private List<TransactionInput> inputs;
+    private List<TransactionOutput> outputs;
 
-    private static final long SUBSIDY = 50;
-
-    Transaction(String to, String data) {
-        if (data == null) {
-            data = to;
-        }
-
-        TransactionInput input = new TransactionInput(new byte[HexHelper.HASH_SIZE], -1, data);
-        TransactionOutput output = new TransactionOutput(SUBSIDY, to);
-        this.inputs = new TransactionInput[]{input};
-        this.outputs = new TransactionOutput[]{output};
+    Transaction(List<TransactionInput> inputs, List<TransactionOutput> outputs) {
+        this.inputs = inputs;
+        this.outputs = outputs;
         setId();
     }
 
@@ -35,11 +28,11 @@ public class Transaction implements Serializable {
         }
     }
 
-    public TransactionInput[] getInputs() {
+    public List<TransactionInput> getInputs() {
         return inputs;
     }
 
-    public TransactionOutput[] getOutputs() {
+    public List<TransactionOutput> getOutputs() {
         return outputs;
     }
 
@@ -48,7 +41,11 @@ public class Transaction implements Serializable {
     }
 
     public boolean isCoinbase() {
-        return inputs.length == 1 && HexHelper.isNull(inputs[0].getTransactionId()) && inputs[0].getOutputIndex() == -1;
+        if (inputs.size() != 1) {
+            return false;
+        }
+        TransactionInput first = inputs.get(0);
+        return HexHelper.isNull(first.getTransactionId()) && first.getOutputIndex() == -1;
     }
 
     @Override

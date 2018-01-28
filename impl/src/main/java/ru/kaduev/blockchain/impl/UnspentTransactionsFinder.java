@@ -11,6 +11,53 @@ public class UnspentTransactionsFinder {
     private List<Transaction> unspentTXs;
     private Map<String, Map<Integer, Boolean>> spentTXOs;
 
+    public class Result {
+        public List<Transaction> getTransactions() {
+            return unspentTXs;
+        }
+
+        public List<TransactionOutput> getOutputs() {
+            List<TransactionOutput> UTXOs = new ArrayList<>();
+            for (final Transaction tx : unspentTXs) {
+                for (final TransactionOutput out : tx.getOutputs()) {
+                    if (!out.canBeUnlockedWith(address)) {
+                        continue;
+                    }
+                    UTXOs.add(out);
+                }
+            }
+
+            return UTXOs;
+        }
+
+        public Map<Transaction, List<Integer>> getSpendableOutputs(long amount) {
+            Map<Transaction, List<Integer>> result = new HashMap<>();
+            long accumulated = 0;
+            for (final Transaction tx : unspentTXs) {
+                for (int outIdx = 0; outIdx < tx.getOutputs().size(); outIdx++) {
+                    final TransactionOutput out = tx.getOutputs().get(outIdx);
+                    if (!out.canBeUnlockedWith(address)) {
+                        continue;
+                    }
+                    accumulated += out.getValue();
+                    if (!result.containsKey(tx)) {
+                        result.put(tx, new ArrayList<>());
+                    }
+                    result.get(tx).add(outIdx);
+                    if (accumulated >= amount) {
+                        return result;
+                    }
+                }
+            }
+
+            throw new RuntimeException(String.format("Not enough funds (%s < %s)", accumulated, amount));
+        }
+
+        public long getBalance() {
+            return getOutputs().stream().mapToLong(TransactionOutput::getValue).sum();
+        }
+    }
+
     public UnspentTransactionsFinder(BlockChain blockChain, String address) {
         this.blockChain = blockChain;
         this.address = address;
@@ -18,26 +65,11 @@ public class UnspentTransactionsFinder {
         spentTXOs = new HashMap<>();
     }
 
-    public List<Transaction> findTX() {
+    public Result find() {
         for (final Block block : blockChain) {
             visitBlock(block);
         }
-        return unspentTXs;
-    }
-
-    public List<TransactionOutput> findUTXOs() {
-        List<Transaction> transactions = findTX();
-        List<TransactionOutput> UTXOs = new ArrayList<>();
-        for (final Transaction tx: transactions) {
-            for (final TransactionOutput out : tx.getOutputs()) {
-                if (!out.canBeUnlockedWith(address)) {
-                    continue;
-                }
-                UTXOs.add(out);
-            }
-        }
-
-        return UTXOs;
+        return new Result();
     }
 
     private void visitBlock(Block block) {
@@ -47,12 +79,12 @@ public class UnspentTransactionsFinder {
     }
 
     private void visitTransaction(Transaction tx) {
-        TransactionOutput[] outs = tx.getOutputs();
-        for (int outIdx = 0; outIdx < outs.length; outIdx++) {
+        List<TransactionOutput> outs = tx.getOutputs();
+        for (int outIdx = 0; outIdx < outs.size(); outIdx++) {
             if (outputWasSpent(tx, outIdx)) {
                 continue;
             }
-            final TransactionOutput out = outs[outIdx];
+            final TransactionOutput out = outs.get(outIdx);
             if (!out.canBeUnlockedWith(address)) {
                 continue;
             }

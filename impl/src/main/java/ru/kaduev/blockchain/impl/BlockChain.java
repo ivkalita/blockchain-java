@@ -51,8 +51,7 @@ public class BlockChain implements Iterable<Block> {
             throw new RuntimeException("Blockchain already exists.");
         }
 
-        Transaction coinbase = new Transaction(address, null);
-        return new BlockChain(storage, coinbase);
+        return new BlockChain(storage, TransactionFactory.createCoinbase(address));
     }
 
     /**

@@ -30,10 +30,14 @@ public class Commands {
     @ShellMethod("Returns address balance")
     public void balance(String address) {
         BlockChain blockChain = BlockChain.openBlockChain();
-        long balance = 0;
-        for (final TransactionOutput out : new UnspentTransactionsFinder(blockChain, address).findUTXOs()) {
-            balance += out.getValue();
-        }
-        System.out.println(String.format("Balance of %s is %s", address, balance));
+        UnspentTransactionsFinder.Result result = new UnspentTransactionsFinder(blockChain, address).find();
+        System.out.println(String.format("Balance of %s is %s", address, result.getBalance()));
+    }
+
+    @ShellMethod("Sends some amount of BTC from A to B")
+    public void send(String from, String to, long amount) {
+        BlockChain blockChain = BlockChain.openBlockChain();
+        Transaction transaction = TransactionFactory.create(from, to, amount, blockChain);
+        blockChain.mineBlock(new Transaction[] {transaction});
     }
 }
