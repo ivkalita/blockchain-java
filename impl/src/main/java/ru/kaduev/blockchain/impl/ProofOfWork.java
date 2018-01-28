@@ -25,19 +25,19 @@ public class ProofOfWork {
     }
 
     private ByteBuffer prepareData(long nonce) {
-        ByteBuffer buffer = ByteBuffer.allocate(Long.SIZE + block.getPrevBlockHash().length + block.getData().length);
-        buffer.put(block.getPrevBlockHash());
-        buffer.putLong(block.getTimestamp().getTime());
-        buffer.put(block.getData());
-        buffer.putLong(TARGET_BITS);
-        buffer.putLong(nonce);
+        ByteBuffer buffer = ByteBuffer.allocate(Long.SIZE + block.getPrevBlockHash().length + HexHelper.HASH_SIZE);
+        buffer.put(block.getPrevBlockHash())
+                .putLong(block.getTimestamp().getTime())
+                .put(block.hashTransactions())
+                .putLong(TARGET_BITS)
+                .putLong(nonce);
 
         return buffer;
     }
 
     public Proof run() {
         byte[] hash = null;
-        System.out.println(String.format("Mining the block containing \"%s\"", new String(block.getData())));
+        System.out.println("Mining the block");
         long nonce = 0;
         while (nonce < Long.MAX_VALUE) {
             hash = hashWithNonce(nonce);
@@ -54,12 +54,7 @@ public class ProofOfWork {
     }
 
     private byte[] hashWithNonce(long nonce) {
-        ByteBuffer data = prepareData(nonce);
-        try {
-            return MessageDigest.getInstance("SHA-256").digest(data.array());
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("No SHA-256 algorithm provider found.");
-        }
+        return HexHelper.hash(prepareData(nonce));
     }
 
     private boolean isHashValid(byte[] hash) {

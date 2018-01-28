@@ -1,18 +1,10 @@
 package ru.kaduev.blockchain.impl;
 
-import org.iq80.leveldb.DB;
-import org.iq80.leveldb.Options;
-
-import java.io.File;
-import java.io.IOException;
 import java.util.NoSuchElementException;
 
-import static org.fusesource.leveldbjni.JniDBFactory.factory;
-
 public class BlockChain implements Iterable<Block> {
-    private final static byte[] TIP = "tip".getBytes();
     private byte[] tip;
-    private DB database;
+    private BlockChainStorage storage;
 
     class Iterator implements java.util.Iterator<Block> {
         Block next;
@@ -28,7 +20,7 @@ public class BlockChain implements Iterable<Block> {
         }
 
         private Block blockByHash(byte[] hash) {
-            byte[] serialized = database.get(hash);
+            byte[] serialized = storage.get(hash);
             if (serialized == null) {
                 return null;
             }
@@ -47,47 +39,91 @@ public class BlockChain implements Iterable<Block> {
         }
     }
 
-    public BlockChain() {
-        database = getDatabase();
-        byte[] tip = this.database.get(TIP);
-        if (tip == null) {
-            Block genesis = new Block();
-            database.put(genesis.getHash(), genesis.getBytes());
-            database.put(TIP, genesis.getHash());
-            this.tip = genesis.getHash();
-        } else {
-            this.tip = tip;
+    /**
+     * Creates brand new blockchain and stores it into the storage.
+     *
+     * @param address coinbase miner address
+     * @return Blockchain instance
+     */
+    public static BlockChain createBlockChain(String address) {
+        BlockChainStorage storage = new BlockChainStorage();
+        if (storage.blockChainExists()) {
+            throw new RuntimeException("Blockchain already exists.");
         }
+
+        Transaction coinbase = new Transaction(address, null);
+        return new BlockChain(storage, coinbase);
     }
 
-    private DB getDatabase() {
-        Options options = new Options();
-        options.createIfMissing(true);
-        try {
-            return factory.open(new File("blockchain_database"), options);
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage());
+    /**
+     * Creates blockchain instance for data stored in the storage.
+     *
+     * @return Blockchain instance
+     */
+    public static BlockChain openBlockChain() {
+        BlockChainStorage storage = new BlockChainStorage();
+        if (!storage.blockChainExists()) {
+            throw new RuntimeException("Blockchain does not exist.");
         }
+
+        return new BlockChain(storage);
     }
 
-    public void close() {
-        try {
-            database.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage());
-        }
+    /**
+     * Clears storage from any existing blockchains.
+     */
+    public static void dropBlockChain() {
+        BlockChainStorage storage = new BlockChainStorage();
+        storage.drop();
     }
 
-    public void add(String data) {
-        byte[] lastHash = database.get(TIP);
-        Block block = new Block(data, lastHash);
-        database.put(block.getHash(), block.getBytes());
-        database.put(TIP, block.getHash());
-        tip = block.getHash();
+    /**
+     * Mines new block with transactions.
+     *
+     * @param transactions transactions to be mined
+     */
+    public void mineBlock(Transaction[] transactions) {
+        mineBlock(transactions, storage.getTip());
     }
 
     @Override
     public java.util.Iterator<Block> iterator() {
         return new Iterator();
+    }
+
+    /**
+     * Loads blockchain from existing storage.
+     *
+     * @param storage blockchain storage
+     */
+    private BlockChain(BlockChainStorage storage) {
+        if (!storage.blockChainExists()) {
+            throw new RuntimeException("Blockchain does not exist.");
+        }
+        this.storage = storage;
+        this.tip = storage.getTip();
+    }
+
+    /**
+     * Creates new blockchain, stores it in the storage.
+     *
+     * @param storage  blockchain storage
+     * @param coinbase coinbase transaction
+     */
+    private BlockChain(BlockChainStorage storage, Transaction coinbase) {
+        if (storage.blockChainExists()) {
+            throw new RuntimeException("Blockchain already exists.");
+        }
+        this.storage = storage;
+        this.tip = storage.getTip();
+
+        mineBlock(new Transaction[]{coinbase}, new byte[HexHelper.HASH_SIZE]);
+    }
+
+    private void mineBlock(Transaction[] transactions, byte[] lastHash) {
+        Block block = new Block(transactions, lastHash);
+        storage.put(block.getHash(), block.getBytes());
+        storage.setTip(block.getHash());
+        tip = block.getHash();
     }
 }

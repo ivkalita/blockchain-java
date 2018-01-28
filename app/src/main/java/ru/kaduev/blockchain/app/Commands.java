@@ -10,20 +10,22 @@ import ru.kaduev.blockchain.impl.ProofOfWork;
 public class Commands {
 
     @ShellMethod("Prints block chain")
-    public void printChain() {
-        BlockChain blockChain = new BlockChain();
+    public void print() {
+        BlockChain blockChain = BlockChain.openBlockChain();
         for (final Block block : blockChain) {
             System.out.println(block);
             ProofOfWork pow = new ProofOfWork(block);
             System.out.println(String.format("Is valid: %s\n", pow.isBlockValid()));
         }
-        blockChain.close();
     }
 
-    @ShellMethod("Adds new block with data")
-    public void addBlock(String data) {
-        BlockChain blockChain = new BlockChain();
-        blockChain.add(data);
-        blockChain.close();
+    @ShellMethod("Creates new blockchain")
+    public void create(String minerAddress) {
+        BlockChain.createBlockChain(minerAddress);
+    }
+
+    @ShellMethod("Drops existing blockchain")
+    public void drop() {
+        BlockChain.dropBlockChain();
     }
 }
