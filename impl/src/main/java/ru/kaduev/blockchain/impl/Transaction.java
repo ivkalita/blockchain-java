@@ -14,7 +14,7 @@ public class Transaction implements Serializable {
 
     Transaction(String to, String data) {
         if (data == null) {
-            data = String.format("Reward to %s", to);
+            data = to;
         }
 
         TransactionInput input = new TransactionInput(new byte[HexHelper.HASH_SIZE], -1, data);
@@ -35,8 +35,20 @@ public class Transaction implements Serializable {
         }
     }
 
+    public TransactionInput[] getInputs() {
+        return inputs;
+    }
+
+    public TransactionOutput[] getOutputs() {
+        return outputs;
+    }
+
     public byte[] getId() {
         return id;
+    }
+
+    public boolean isCoinbase() {
+        return inputs.length == 1 && HexHelper.isNull(inputs[0].getTransactionId()) && inputs[0].getOutputIndex() == -1;
     }
 
     @Override

@@ -23,4 +23,8 @@ public class TransactionOutput implements Serializable {
     public String toString() {
         return String.format("TxOutput(value=%s, scriptPublicKey=%s)", value, scriptPublicKey);
     }
+
+    public boolean canBeUnlockedWith(String unlockingData) {
+        return scriptPublicKey.equals(unlockingData);
+    }
 }

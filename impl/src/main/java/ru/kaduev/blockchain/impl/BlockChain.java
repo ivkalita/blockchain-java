@@ -1,6 +1,6 @@
 package ru.kaduev.blockchain.impl;
 
-import java.util.NoSuchElementException;
+import java.util.*;
 
 public class BlockChain implements Iterable<Block> {
     private byte[] tip;

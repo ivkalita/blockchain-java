@@ -39,4 +39,14 @@ public class HexHelper {
     public static byte[] hash(ByteBuffer buffer) {
         return HexHelper.hash(buffer.array());
     }
+
+    public static boolean isNull(byte[] data) {
+        for (int i = 0; i < data.length; i++) {
+            if (data[i] != 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

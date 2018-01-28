@@ -2,9 +2,7 @@ package ru.kaduev.blockchain.app;
 
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
-import ru.kaduev.blockchain.impl.Block;
-import ru.kaduev.blockchain.impl.BlockChain;
-import ru.kaduev.blockchain.impl.ProofOfWork;
+import ru.kaduev.blockchain.impl.*;
 
 @ShellComponent
 public class Commands {
@@ -20,12 +18,22 @@ public class Commands {
     }
 
     @ShellMethod("Creates new blockchain")
-    public void create(String minerAddress) {
-        BlockChain.createBlockChain(minerAddress);
+    public void create(String address) {
+        BlockChain.createBlockChain(address);
     }
 
     @ShellMethod("Drops existing blockchain")
     public void drop() {
         BlockChain.dropBlockChain();
+    }
+
+    @ShellMethod("Returns address balance")
+    public void balance(String address) {
+        BlockChain blockChain = BlockChain.openBlockChain();
+        long balance = 0;
+        for (final TransactionOutput out : new UnspentTransactionsFinder(blockChain, address).findUTXOs()) {
+            balance += out.getValue();
+        }
+        System.out.println(String.format("Balance of %s is %s", address, balance));
     }
 }

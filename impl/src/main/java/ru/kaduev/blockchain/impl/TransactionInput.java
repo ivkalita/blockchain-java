@@ -4,10 +4,10 @@ import java.io.Serializable;
 
 public class TransactionInput implements Serializable {
     private byte[] transactionId;
-    private long outputIndex;
+    private int outputIndex;
     private String scriptSignature;
 
-    TransactionInput(byte[] transactionId, long outputIndex, String scriptSignature) {
+    TransactionInput(byte[] transactionId, int outputIndex, String scriptSignature) {
         this.transactionId = transactionId;
         this.outputIndex = outputIndex;
         this.scriptSignature = scriptSignature;
@@ -17,7 +17,7 @@ public class TransactionInput implements Serializable {
         return transactionId;
     }
 
-    public long getOutputIndex() {
+    public int getOutputIndex() {
         return outputIndex;
     }
 
@@ -33,5 +33,9 @@ public class TransactionInput implements Serializable {
                 outputIndex,
                 scriptSignature
         );
+    }
+
+    public boolean canBeUnlockedWith(String unlockingData) {
+        return scriptSignature.equals(unlockingData);
     }
 }
